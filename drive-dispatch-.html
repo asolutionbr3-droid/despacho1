@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drive Dispatch</title>
+<style>
+  :root{
+    --asfalto:#1f2933; --faixa:#f5b800; --fundo:#eef0f2; --card:#ffffff;
+    --texto:#1f2933; --suave:#667085; --borda:#d5d9de; --zap:#1a9e55;
+  }
+  *{box-sizing:border-box;margin:0}
+  body{font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;background:var(--fundo);color:var(--texto);line-height:1.45}
+
+  header{background:var(--asfalto);color:#fff;padding:36px 20px 30px;position:relative}
+  header::after{content:"";position:absolute;left:0;right:0;bottom:0;height:6px;
+    background:repeating-linear-gradient(90deg,var(--faixa) 0 36px,transparent 36px 60px)}
+  .wrap{max-width:1040px;margin:0 auto}
+  h1{font-size:clamp(2rem,6vw,3.2rem);letter-spacing:-.02em;font-weight:800}
+  h1 span{color:var(--faixa)}
+  header p{color:#c3cad2;margin-top:6px;max-width:46ch}
+
+  .btn-dispatch{display:inline-block;margin-top:20px;background:var(--zap);color:#fff;text-decoration:none;
+    font-weight:800;font-size:1.05rem;padding:14px 22px;border-radius:10px}
+  .btn-dispatch:hover{filter:brightness(.92)}
+
+  nav{padding:18px 20px 6px}
+  .cats{display:flex;flex-wrap:wrap;gap:8px}
+  .cats button{border:1px solid var(--borda);background:var(--card);color:var(--texto);
+    padding:8px 14px;border-radius:999px;font-size:.9rem;cursor:pointer}
+  .cats button:hover{border-color:var(--asfalto)}
+  .cats button.ativo{background:var(--asfalto);color:#fff;border-color:var(--asfalto)}
+  .cats button:focus-visible,a:focus-visible{outline:3px solid var(--faixa);outline-offset:2px}
+
+  main{padding:14px 20px 50px}
+  .grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+  .card{background:var(--card);border:1px solid var(--borda);border-left:6px solid var(--faixa);
+    border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:6px}
+  .card h3{font-size:1.1rem}
+  .cat{font-size:.85rem;font-weight:700;color:var(--asfalto);background:#fff3c4;
+    align-self:flex-start;padding:2px 10px;border-radius:6px}
+  .cidade{color:var(--suave);font-size:.95rem}
+  .zap{margin-top:10px;display:block;text-align:center;background:var(--zap);color:#fff;
+    text-decoration:none;font-weight:700;padding:10px;border-radius:8px}
+  .zap:hover{filter:brightness(.92)}
+  .vazio{padding:30px 0;color:var(--suave)}
+  footer{text-align:center;color:var(--suave);font-size:.85rem;padding-bottom:30px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>Drive <span>Dispatch</span></h1>
+    <p>Encontre motoristas e prestadores de serviço e chame direto no WhatsApp.</p>
+    <a class="btn-dispatch" id="btnDispatch" href="#" target="_blank" rel="noopener">Chamar no WhatsApp Dispatch</a>
+  </div>
+</header>
+
+<nav><div class="wrap"><div class="cats" id="cats"></div></div></nav>
+
+<main><div class="wrap">
+  <div class="grade" id="grade"></div>
+  <p class="vazio" id="vazio" hidden>Nenhum motorista encontrado. Tente outra categoria.</p>
+</div></main>
+
+<footer>Drive Dispatch</footer>
+
+<script>
+/* ============================================================
+   EDITE AQUI
+   1) CATEGORIAS: adicione ou remova nomes da lista.
+   2) MOTORISTAS: copie uma linha { ... }, cole abaixo e altere.
+      whatsapp = só números, com 55 + DDD + número (ex: 5575999990000)
+   ============================================================ */
+
+/* WhatsApp do Dispatch (botão do topo): só números, com 55 + DDD + número */
+const WHATSAPP_DISPATCH = "5575999990000";
+
+const CATEGORIAS = [
+  "Entregas","Corridas","Viagens pets","Eletricista","Guincho","Mecânica",
+  "Entregas de supermercados","Motorista escolar","Reparos","Lava jato","Outros"
+];
+
+const MOTORISTAS = [
+  { nome:"João Silva",     categoria:"Entregas",                  cidade:"Serrinha - BA",   whatsapp:"5575999990001" },
+  { nome:"Maria Souza",    categoria:"Corridas",                  cidade:"Serrinha - BA",   whatsapp:"5575999990002" },
+  { nome:"Carlos Pereira", categoria:"Viagens pets",              cidade:"Feira de Santana - BA", whatsapp:"5575999990003" },
+  { nome:"Antônio Lima",   categoria:"Eletricista",               cidade:"Serrinha - BA",   whatsapp:"5575999990004" },
+  { nome:"Pedro Alves",    categoria:"Guincho",                   cidade:"Serrinha - BA",   whatsapp:"5575999990005" },
+  { nome:"Rafael Costa",   categoria:"Mecânica",                  cidade:"Teofilândia - BA", whatsapp:"5575999990006" },
+  { nome:"Lucas Santos",   categoria:"Entregas de supermercados", cidade:"Serrinha - BA",   whatsapp:"5575999990007" },
+  { nome:"Ana Ribeiro",    categoria:"Motorista escolar",         cidade:"Serrinha - BA",   whatsapp:"5575999990008" },
+  { nome:"José Ferreira",  categoria:"Reparos",                   cidade:"Barrocas - BA",   whatsapp:"5575999990009" },
+  { nome:"Marcos Rocha",   categoria:"Lava jato",                 cidade:"Serrinha - BA",   whatsapp:"5575999990010" },
+  { nome:"Paulo Nunes",    categoria:"Outros",                    cidade:"Serrinha - BA",   whatsapp:"5575999990011" }
+];
+
+/* ======================= FIM DA ÁREA EDITÁVEL ======================= */
+
+let filtro = "Todos";
+const $cats = document.getElementById("cats");
+const $grade = document.getElementById("grade");
+const $vazio = document.getElementById("vazio");
+
+function esc(t){ const d=document.createElement("div"); d.textContent=t; return d.innerHTML; }
+
+function desenharCategorias(){
+  $cats.innerHTML = ["Todos",...CATEGORIAS].map(c =>
+    `<button class="${c===filtro?'ativo':''}" data-c="${esc(c)}">${esc(c)}</button>`).join("");
+  $cats.querySelectorAll("button").forEach(b => b.onclick = () => { filtro=b.dataset.c; desenharCategorias(); desenharCards(); });
+}
+
+function desenharCards(){
+  const lista = MOTORISTAS.filter(m => filtro==="Todos" || m.categoria===filtro);
+  $grade.innerHTML = lista.map(m => `
+    <article class="card">
+      <h3>${esc(m.nome)}</h3>
+      <span class="cat">${esc(m.categoria)}</span>
+      <span class="cidade">${esc(m.cidade)}</span>
+      <a class="zap" href="https://wa.me/${m.whatsapp.replace(/\D/g,'')}?text=${encodeURIComponent('Olá '+m.nome+', vi seu contato no Drive Dispatch.')}" target="_blank" rel="noopener">Chamar no WhatsApp</a>
+    </article>`).join("");
+  $vazio.hidden = lista.length > 0;
+}
+
+document.getElementById("btnDispatch").href =
+  "https://wa.me/" + WHATSAPP_DISPATCH.replace(/\D/g,"") + "?text=" + encodeURIComponent("Olá, preciso de ajuda com o Drive Dispatch.");
+desenharCategorias();
+desenharCards();
+</script>
+</body>
+</html>
